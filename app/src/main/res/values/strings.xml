@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">IOU</string>
+    <string name="action_settings">Settings</string>
+    <string name="email_address">owenlejeuneapps@gmail.com</string>
+    <string-array name="types">
+        <item>Credits</item>
+        <item>Debits</item>
+    </string-array>
+    <string-array name="sort_settings">
+        <item>All</item>
+        <item>Credits</item>
+        <item>Debits</item>
+    </string-array>
+    <string-array name="date_sort">
+        <item>Added</item>
+        <item>Due Date: Ascending</item>
+        <item>Due Date: Descending</item>
+    </string-array>
+    <string name="additional_settings">Additional Settings</string>
+    <string name="contact_me">Contact Me</string>
+    <string name="policy">Privacy Policy</string>
+    <string name="rate">Rate</string>
+    <string name="clear_all">Clear All</string>
+    <string name="due_on">Due On: </string>
+    <string name="sort_by">Sort By: </string>
+    <string name="empty_view">No IOUs!</string>
+    <string name="due_date">Due Date</string>
+    <string name="contact_label">Contact</string>
+    <string name="amount_label">Amount</string>
+    <string name="note_label">Note</string>
+    <string name="type_label">Type</string>
+</resources>
