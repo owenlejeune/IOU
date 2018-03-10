@@ -21,14 +21,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import java.util.Date;
 
-/**
- * Created by owenlejeune on 2017-04-11.
- */
-
-public class InputDialogFragment extends DialogFragment {
+public class InputDialogFragment extends DialogFragment{
 
     private static InputDialogListenerInterface listener;
     private ImageButton cpicker;
@@ -36,7 +31,6 @@ public class InputDialogFragment extends DialogFragment {
     private EditText amountText;
     private EditText noteText;
     private DatePicker dueDatePicker;
-
     private String number;
     private Bitmap photo;
     private String name;
@@ -45,13 +39,12 @@ public class InputDialogFragment extends DialogFragment {
     private String note;
     private boolean type;
     private Date dueDate;
-
     private View view;
-
     private static Object[] fields;
     private static boolean firstStart = true;
     private Spinner typesList;
     private ArrayAdapter<CharSequence> adapter;
+    private IOU iou;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState){
@@ -68,22 +61,16 @@ public class InputDialogFragment extends DialogFragment {
         contactText = (EditText)view.findViewById(R.id.contact_text);
 
         if(getContext().checkCallingOrSelfPermission("android.permission.READ_CONTACTS") == PackageManager.PERMISSION_GRANTED){
-            //passes this to ContactActivity to make data updating easier (see later methods)
             ContactActivity.setParent(this);
-
-            cpicker.setOnClickListener(new View.OnClickListener() {
+            cpicker.setOnClickListener(new View.OnClickListener(){
                 @Override
-                public void onClick(View view) {
+                public void onClick(View view){
                     Intent i = new Intent(view.getContext(), ContactActivity.class);
                     startActivityForResult(i, 0);
                 }
             });
-
-            //if(firstStart){
-                contactText.setHint("<-- Press that button to add a contact!");
-                firstStart = false;
-            //}
-
+            contactText.setHint("<-- Press that button to add a contact!");
+            firstStart = false;
         }
 
         dueDatePicker = (DatePicker)view.findViewById(R.id.due_date_picker);
@@ -94,66 +81,52 @@ public class InputDialogFragment extends DialogFragment {
         typesList = (Spinner)view.findViewById(R.id.type_menu);
         adapter = ArrayAdapter.createFromResource(getContext(), R.array.types, android.R.layout.simple_spinner_dropdown_item);
         typesList.setAdapter(adapter);
-
-        typesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        typesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if(i == 0){
-                    type = true;
-                }else{
-                    type = false;
-                }
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l){
+                type = (i == 0);
             }
-
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
+            public void onNothingSelected(AdapterView<?> adapterView){
                 Log.i("Spinner", "Nothing selected");
             }
-        });
+          });
 
-        builder.setNegativeButton("CANCEL", null);
+        if(iou != null){
+            cpicker.setImageBitmap(iou.getContactPhoto());
+            contactText.setText(iou.getContactName());
+            amountText.setText("" + iou.getAmount());
+            noteText.setText(iou.getNote());
+            int s = (iou.isType()) ? 0 : 1;
+            typesList.setSelection(s);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(iou.getDueDate());
+            dueDatePicker.init(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), null);
+        }
 
-        builder.setPositiveButton("CREATE", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i){
+                if(iou != null) listener.addIOU(iou);
+            }
+        })
+        .setPositiveButton("CREATE", new DialogInterface.OnClickListener(){
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-
                 amount = amountText.getText().toString();
                 note = noteText.getText().toString();
                 name = contactText.getText().toString();
-                dueDate = getDateFromDatePicker(dueDatePicker);
+                dueDate = getDateFromPicker(dueDatePicker);
 
-                //ensures all fields are filled out (accounts for lack of contact permissions)
-                //TODO - prevent dialog from closing if all fields aren't filled
 
-                if (!amount.isEmpty() && !note.isEmpty() && !name.isEmpty()) {
+                if (!(amount.isEmpty() || note.isEmpty() || name.isEmpty())){
                     listener.onDialogPositiveClick(InputDialogFragment.this);
-                }else{
-                    Toast.makeText(getContext(), "IOU can only be created when all fields are full!", Toast.LENGTH_SHORT).show();
-                }    
+                } else {
+                    Toast.makeText(getContext(), "IOUs can only be created when all fields are full!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         return builder.create();
-    }
-
-    public void update(){
-
-        //sets all values to current information from ContactActivity
-
-        number = (String)fields[0];
-        photo = (Bitmap)fields[1];
-        name = (String)fields[2];
-        contactUri = (Uri)fields[3];
-
-        cpicker.setImageBitmap(photo);
-
-        contactText.setText(name);
-    }
-
-    //method made static so it can be called from ContactActivity
-    public static void setFields(Object[] input, InputDialogFragment parent){
-        //gets contact information passed from ContactActivity and performs an update
-        fields = input;
-        parent.update();
     }
 
     @Override
@@ -161,13 +134,13 @@ public class InputDialogFragment extends DialogFragment {
         super.onAttach(activity);
 
         try{
-            listener = (InputDialogListenerInterface) activity;
+            listener = (InputDialogListenerInterface)activity;
         }catch (ClassCastException e){
             throw new ClassCastException(activity.toString() + " must implement InputDialogListenerInterface");
         }
     }
 
-    private Date getDateFromDatePicker(DatePicker datePicker){
+    private Date getDateFromPicker(DatePicker datePicker){
         int day = datePicker.getDayOfMonth();
         int month = datePicker.getMonth();
         int year = datePicker.getYear();
@@ -176,6 +149,25 @@ public class InputDialogFragment extends DialogFragment {
         calendar.set(year, month, day);
 
         return calendar.getTime();
+    }
+
+    public void setEditFields(IOU iou){
+        this.iou = iou;
+    }
+
+    public static void setFields(Object[] input, InputDialogFragment parent){
+        fields = input;
+        parent.update();
+    }
+
+    public void update(){
+        number = (String)fields[0];
+        photo = (Bitmap)fields[1];
+        name = (String)fields[2];
+        contactUri = (Uri)fields[3];
+
+        cpicker.setImageBitmap(photo);
+        contactText.setText(name);
     }
 
     public String getNumber() {
@@ -209,4 +201,6 @@ public class InputDialogFragment extends DialogFragment {
     public Date getDueDate() {
         return dueDate;
     }
+
+
 }

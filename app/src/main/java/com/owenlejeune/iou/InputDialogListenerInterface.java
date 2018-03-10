@@ -6,4 +6,5 @@ package com.owenlejeune.iou;
 
 public interface InputDialogListenerInterface {
     public void onDialogPositiveClick(InputDialogFragment fragment);
+    public void addIOU(IOU iou);
 }

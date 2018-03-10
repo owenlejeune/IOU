@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -51,6 +52,7 @@ public class IOU implements java.io.Serializable {
         this.amount = 0;
         this.type = false;
         this.note = "Add a new IOU!";
+        this.dueDate = Calendar.getInstance().getTime();
     }
 
     public void writeTo(DataOutputStream file, Activity activity) {

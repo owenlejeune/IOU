@@ -65,7 +65,7 @@ public class IOUArrayAdapter extends ArrayAdapter {
 
         textContact.setText(current.getContactName());
 
-        if(current.getDueDate() != null){
+        if(current.getDueDate() != null && current != MainActivity.getStartupIOU()){
             String[] date = current.getDueDate().toString().split(" ");
 
             textDueDate.setText(date[0] + " " + date[1] + " " + date[2]);
